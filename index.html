@@ -191,47 +191,50 @@ class SimplePetal {
   }
 
   draw(ctx, timeNow){
-    const g = this.grow;
-    const ang = this.angle + this.variation;
-    // punto medio del petalo
-    const mx = this.cx + Math.cos(ang) * (this.length * 0.5 * g);
-    const my = this.cy + Math.sin(ang) * (this.length * 0.5 * g);
+  const g = this.grow;
+  const ang = this.angle + this.variation;
+  // punto medio del petalo (no muy usado, solo referencia)
+  const mx = this.cx + Math.cos(ang) * (this.length * 0.5 * g);
+  const my = this.cy + Math.sin(ang) * (this.length * 0.5 * g);
 
-    ctx.save();
-    ctx.translate(this.cx, this.cy);
-    ctx.rotate(ang);
+  ctx.save();
+  ctx.translate(this.cx, this.cy);
+  ctx.rotate(ang);
 
-    // forma simple: un triángulo redondeado (base en 0, punta en +length)
-    ctx.beginPath();
-    const bw = this.width * g;
-    const lh = this.length * g;
-    // base izquierda
-    ctx.moveTo(-bw, 6);
-    // punta suavizada
-    ctx.quadraticCurveTo(0, -lh*0.92, bw, 6);
-    // cierre base
-    ctx.closePath();
+  // forma puntiaguda: base más estrecha y punta más alargada
+  const bw = this.width * g;
+  const lh = this.length * g;
 
-    // gradiente vertical simple para dar volumen
-    const grad = ctx.createLinearGradient(0, 6, 0, -lh);
-    grad.addColorStop(0, this.colorInner);
-    grad.addColorStop(1, this.colorOuter);
+  // Dibujar la forma: base cerca del centro, punta muy hacia -lh*1.15 para hacerla puntiaguda
+  ctx.beginPath();
+  // base izquierda (más cerca del eje para punta)
+  ctx.moveTo(-bw*0.5, 6);
+  // curva a la punta (control point más alto -> punta más aguda)
+  ctx.quadraticCurveTo(0, -lh*1.15, bw*0.5, 6);
+  ctx.lineTo(bw*0.5, 6);
+  ctx.closePath();
 
-    ctx.fillStyle = grad;
-    ctx.fill();
+  // gradiente vertical para volumen
+  const grad = ctx.createLinearGradient(0, 8, 0, -lh);
+  grad.addColorStop(0, this.colorInner);
+  grad.addColorStop(1, this.colorOuter);
 
-    // ligero brillo en el borde superior
-    ctx.beginPath();
-    ctx.globalAlpha = 0.28 * (0.7 + 0.3*Math.sin(timeNow*0.02 + this.age*0.08));
-    ctx.moveTo(-bw*0.6, 2);
-    ctx.quadraticCurveTo(0, -lh*0.6, bw*0.6, 2);
-    ctx.lineTo(bw*0.6, 0);
-    ctx.quadraticCurveTo(0, -lh*0.45, -bw*0.6, 0);
-    ctx.fillStyle = 'rgba(255,255,200,0.85)';
-    ctx.fill();
+  ctx.fillStyle = grad;
+  ctx.fill();
 
-    ctx.restore();
-  }
+  // brillo más fino en el costado superior para dar sensación de borde
+  ctx.beginPath();
+  ctx.globalAlpha = 0.22 * (0.6 + 0.4*Math.sin(timeNow*0.02 + this.age*0.08));
+  ctx.moveTo(-bw*0.3, 2);
+  ctx.quadraticCurveTo(0, -lh*0.75, bw*0.3, 2);
+  ctx.lineTo(bw*0.3, 0);
+  ctx.quadraticCurveTo(0, -lh*0.55, -bw*0.3, 0);
+  ctx.fillStyle = 'rgba(255,255,200,0.82)';
+  ctx.fill();
+
+  ctx.restore();
+}
+  
 
   dead(){ return this.age >= this.life; }
 }
