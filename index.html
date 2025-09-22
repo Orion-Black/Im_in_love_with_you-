@@ -1,228 +1,464 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>I Loveu Girl</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Felicitación - Fuegos Artificiales Girasol</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: black;
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    html,body{
+      height:100%;
+      margin:0;
+      background:#000;
+      overflow:hidden;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
     }
-
-    #background {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      z-index: 5;
+    #background{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      overflow:hidden;
+      background:linear-gradient(180deg,#050505 0%, #0b0b0b 100%);
     }
-
-    .blur-light {
-      position: absolute;
-      border-radius: 50%;
-      opacity: 0.5;
-      animation: moveLight 6s infinite ease-in-out;
-      background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 80%);
+    .blur-light{
+      position:absolute;
+      filter: blur(40px) saturate(1.4);
+      opacity:0.45;
+      pointer-events:none;
+      mix-blend-mode:screen;
+      transform: translate3d(0,0,0);
+      animation: moveLight linear infinite;
     }
-
     @keyframes moveLight {
-      0% {
-        transform: translate(0, 0) scale(0.5);
-        opacity: 0.2;
-      }
-      50% {
-        opacity: 0.5;
-        transform: translate(100vw, 100vh) scale(1.5);
-      }
-      100% {
-        transform: translate(-50vw, -50vh) scale(0.5);
-        opacity: 0.2;
-      }
+      0%{ transform: translateY(0) translateX(0) scale(1); opacity:.6; }
+      50%{ transform: translateY(-60px) translateX(30px) scale(1.05); opacity:.9; }
+      100%{ transform: translateY(0) translateX(0) scale(1); opacity:.6; }
     }
 
-    canvas {
-      display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 7;
+    #fireworksCanvas{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      display:block;
     }
 
-    #message {
-      position: absolute;
-      z-index: 10;
-      bottom: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      max-width: 500px;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.8);
-      text-align: center;
-      font-size: 2em;
-      font-weight: bold;
-      color: black;
-      border-radius: 10px;
-      animation: floatUp 4s ease-out forwards;
+    #message{
+      position:fixed;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      z-index:2;
+      background: rgba(255,255,255,0.9);
+      padding: 28px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      text-align:center;
+      max-width:90%;
+      animation: floatUp 1.2s ease-out both;
+    }
+    #message h1{
+      margin:0 0 8px 0;
+      font-size:28px;
+      color:#222;
+      letter-spacing:0.6px;
+    }
+    #message p{ margin:0; color:#444; }
+
+    @keyframes floatUp{
+      from{ transform: translate(-50%, 60%) scale(.98); opacity:0; }
+      to{ transform: translate(-50%, -50%) scale(1); opacity:1; }
     }
 
-    @keyframes floatUp {
-      from {
-        bottom: -200px;
-      }
-      to {
-        bottom: 50%;
-        transform: translate(-50%, -50%);
-      }
+    /* responsive tweaks */
+    @media (max-width:520px){
+      #message{ padding:18px 20px; border-radius:12px; }
+      #message h1{ font-size:20px; }
     }
   </style>
 </head>
 <body>
   <div id="background"></div>
   <canvas id="fireworksCanvas"></canvas>
-  <div id="message">¡Feliz cumpleaños amor, me encantas mucho!<br>❤️</div>
 
-  <script>
-    const canvas = document.getElementById('fireworksCanvas');
-    const ctx = canvas.getContext('2d');
-    const background = document.getElementById('background');
+  <div id="message">
+    <h1>¡Feliz día!</h1>
+    <p>Que tu día esté lleno de luz y color.</p>
+  </div>
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+<script>
+/* =========================
+   Setup básico y fondo
+   ========================= */
+const bg = document.getElementById('background');
+const canvas = document.getElementById('fireworksCanvas');
+const ctx = canvas.getContext('2d',{ alpha: true });
 
-    // Crear animación de luces borrosas
-    for (let i = 0; i < 20; i++) {
-      const light = document.createElement('div');
-      light.classList.add('blur-light');
-      light.style.width = `${Math.random() * 200 + 100}px`;
-      light.style.height = light.style.width;
-      light.style.top = `${Math.random() * 100}vh`;
-      light.style.left = `${Math.random() * 100}vw`;
-      light.style.background = `radial-gradient(circle, rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},0.5) 0%, transparent 80%)`;
-      background.appendChild(light);
+function fitCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+fitCanvas();
+window.addEventListener('resize', fitCanvas);
+
+/* crea luces borrosas dinámicas */
+const lightCount = 20;
+const lightColors = [
+  'rgba(255,180,120,0.8)',
+  'rgba(120,180,255,0.7)',
+  'rgba(160,100,240,0.65)',
+  'rgba(255,220,120,0.6)'
+];
+for(let i=0;i<lightCount;i++){
+  const d = document.createElement('div');
+  d.className = 'blur-light';
+  const size = Math.round((Math.random()*0.18 + 0.08) * Math.max(window.innerWidth, window.innerHeight));
+  d.style.width = `${size}px`;
+  d.style.height = `${size}px`;
+  d.style.left = `${Math.random()*100}%`;
+  d.style.top = `${Math.random()*100}%`;
+  d.style.background = `radial-gradient(circle at 30% 30%, ${lightColors[Math.floor(Math.random()*lightColors.length)]}, rgba(0,0,0,0))`;
+  d.style.animationDuration = `${10 + Math.random()*20}s`;
+  d.style.opacity = 0.35 + Math.random()*0.35;
+  bg.appendChild(d);
+}
+
+/* =========================
+   Fecha: comprobar si es 21 de Septiembre
+   ========================= */
+function es21Septiembre(){
+  const now = new Date();
+  // getMonth(): 0 -> enero, 8 -> septiembre
+  return (now.getMonth() === 8) && (now.getDate() === 21);
+}
+
+/* =========================
+   Clases Partículas / Fuegos
+   ========================= */
+
+class Particle {
+  constructor(x,y, vx, vy, color, radius=2, life=80){
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.color = color;
+    this.radius = radius;
+    this.life = life;
+    this.age = 0;
+    this.alpha = 1;
+  }
+
+  update(){
+    // simple physics-ish
+    this.vy += 0.03; // pequeña gravedad
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vx *= 0.995;
+    this.vy *= 0.995;
+    this.age++;
+    this.alpha = Math.max(0, 1 - this.age/this.life);
+  }
+
+  draw(ctx){
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.beginPath();
+    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  dead(){ return this.age >= this.life; }
+}
+
+/* Petal: dibuja un pétalo tipo elipse rotada con gradiente */
+class Petal {
+  constructor(cx,cy, angle, length, width, colorA, colorB, speedFactor=1, life=120){
+    this.cx = cx; this.cy = cy;
+    this.angle = angle; // en radianes
+    this.length = length;
+    this.width = width;
+    this.colorA = colorA; // borde interior (amarillo más oscuro)
+    this.colorB = colorB; // exterior (amarillo brillante)
+    this.speedFactor = speedFactor;
+    this.life = life;
+    this.age = 0;
+    // position starts near center and will 'grow' outward
+    this.grow = 0; // 0..1
+    // small oscillation para "vibrar"
+    this.osc = Math.random()*Math.PI*2;
+  }
+
+  update(){
+    this.age++;
+    // crecer rápidamente al inicio
+    this.grow = Math.min(1, this.grow + 0.04 * this.speedFactor);
+    // ligera vibración
+    this.osc += 0.25 * this.speedFactor;
+  }
+
+  draw(ctx, timeNow){
+    const progress = this.grow;
+    // posicion final del pétalo (punto central de la elipse)
+    const px = this.cx + Math.cos(this.angle) * (this.length * progress*0.7 + 6);
+    const py = this.cy + Math.sin(this.angle) * (this.length * progress*0.7 + 6);
+
+    // pulso para vibrancia (modula saturación/alpha)
+    const pulse = 0.7 + 0.3 * Math.sin(this.osc + timeNow*0.02 + this.age*0.06);
+
+    // gradiente local para pétalo
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(this.angle + Math.PI/2);
+    ctx.globalAlpha = Math.min(1, pulse);
+
+    // crea gradiente para el pétalo (de base a punta)
+    const g = ctx.createLinearGradient(0, -this.length*progress, 0, this.length*progress);
+    g.addColorStop(0, this.colorA);
+    g.addColorStop(1, this.colorB);
+
+    ctx.beginPath();
+    // dibujar una elipse con ctx.ellipse (radiusX, radiusY)
+    ctx.ellipse(0, 0, this.width * (0.6 + 0.4*progress), this.length * (0.8*progress), 0, 0, Math.PI*2);
+    ctx.fillStyle = g;
+    ctx.fill();
+
+    // suavísimo brillo en la punta
+    ctx.beginPath();
+    ctx.globalAlpha = 0.18 * pulse;
+    ctx.ellipse(0, -this.length*0.15*progress, this.width * 0.45, this.length*0.45*progress, 0, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,230,0.9)';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  dead(){ return this.age >= this.life; }
+}
+
+/* Firework: lanza y explota */
+class Firework {
+  constructor(x, y, targetY, color, type='default'){
+    this.x = x;
+    this.y = y;
+    this.startX = x;
+    this.startY = y;
+    this.targetY = targetY;
+    this.speed = 4 + Math.random()*1.6;
+    this.color = color;
+    this.exploded = false;
+    this.particles = [];
+    this.type = type; // 'sunflower' o 'default'
+  }
+
+  update(){
+    if(!this.exploded){
+      // subir hasta target
+      this.y -= this.speed;
+      // efecto ligera oscilación
+      this.x += Math.sin(this.y*0.05 + (this.startX%10))*0.4;
+      if(this.y <= this.targetY){
+        this.explode();
+      }
+    } else {
+      // actualizar partículas/pétalos
+      for(let i=this.particles.length-1;i>=0;i--){
+        const p = this.particles[i];
+        if(p.update) p.update();
+        if(p.dead && p.dead()){
+          this.particles.splice(i,1);
+        }
+      }
     }
+  }
 
-    const colors = ['#ff0040', '#00ff80', '#0080ff', '#ffff00', '#ff8000', '#ff00ff'];
-
-    class Particle {
-      constructor(x, y, color) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.radius = Math.random() * 3 + 1;
-        this.t = Math.random() * Math.PI * 2;
-        this.heartScale = 3;
-        this.life = Math.random() * 60 + 40;
+  draw(ctx, timeNow){
+    if(!this.exploded){
+      // dibuja el proyectil
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = this.color;
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 12;
+      ctx.arc(this.x, this.y, 3.5, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      // dibujar partículas/petals
+      for(const p of this.particles){
+        if(p.draw) p.draw(ctx, timeNow);
+        else if(p instanceof Particle) p.draw(ctx);
       }
-
-      update() {
-        const heartX = 16 * Math.pow(Math.sin(this.t), 3);
-        const heartY =
-          13 * Math.cos(this.t) -
-          5 * Math.cos(2 * this.t) -
-          2 * Math.cos(3 * this.t) -
-          Math.cos(4 * this.t);
-
-        this.x += (heartX * this.heartScale) / 10;
-        this.y -= (heartY * this.heartScale) / 10;
-
-        this.life--;
-      }
-
-      draw() {
+      // dibujar brillo central si existe (centro de girasol)
+      // buscaremos partik que marcan el centro: guardado como this._center
+      if(this._center){
+        ctx.save();
+        const c = this._center;
+        // glow
+        const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 60);
+        g.addColorStop(0, 'rgba(255,200,150,0.95)');
+        g.addColorStop(0.12, 'rgba(200,150,120,0.95)');
+        g.addColorStop(0.4, 'rgba(140,90,50,0.6)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
+        ctx.arc(c.x, c.y, 60, 0, Math.PI*2);
         ctx.fill();
+
+        // círculo central café brillante
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(100,45,8,1)';
+        ctx.arc(c.x, c.y, 18, 0, Math.PI*2);
+        ctx.fill();
+
+        // pequeño destello central
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(220,160,90,0.35)';
+        ctx.arc(c.x-6, c.y-6, 6, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
       }
     }
+  }
 
-    class Firework {
-      constructor(x, y, targetY, color) {
-        this.x = x;
-        this.y = y;
-        this.targetY = targetY;
-        this.color = color;
-        this.particles = [];
-        this.exploded = false;
+  explode(){
+    this.exploded = true;
+    const cx = this.x;
+    const cy = this.y;
+    const isSun = this.type === 'sunflower';
+
+    if(isSun){
+      // Crear centro (no se mueve)
+      this._center = { x: cx, y: cy };
+
+      // Generar pétalos: número, longitud y grosor
+      const petalCount = 18 + Math.floor(Math.random()*8); // 18 a 25 pétalos
+      for(let i=0;i<petalCount;i++){
+        const angle = (i / petalCount) * Math.PI*2 + (Math.random()*0.12 - 0.06);
+        const length = 52 + Math.random()*36; // longitud del pétalo
+        const width = 16 + Math.random()*8; // ancho
+        // variar tonos amarillos para vibrar
+        const colorA = `rgba(200,150,30,1)`; // interior más oscuro
+        const colorB = `rgba(255,220,40,1)`; // exterior brillante
+        const speedFactor = 0.8 + Math.random()*1.2;
+        const petal = new Petal(cx, cy, angle, length, width, colorA, colorB, speedFactor, 140 + Math.floor(Math.random()*60));
+        this.particles.push(petal);
       }
 
-      update() {
-        if (!this.exploded) {
-          this.y -= 4;
-          if (this.y <= this.targetY) {
-            this.explode();
-          }
-        }
-
-        this.particles.forEach((particle, index) => {
-          particle.update();
-          if (particle.life <= 0) {
-            this.particles.splice(index, 1);
-          }
-        });
+      // partículas de polvillo/nuez alrededor del centro (pequeñas motas café)
+      const dustCount = 30 + Math.floor(Math.random()*30);
+      for(let i=0;i<dustCount;i++){
+        const a = Math.random()*Math.PI*2;
+        const r = 6 + Math.random()*36;
+        const vx = Math.cos(a)*(0.5 + Math.random()*1.6);
+        const vy = Math.sin(a)*(0.5 + Math.random()*1.6);
+        const px = cx + Math.cos(a)*8;
+        const py = cy + Math.sin(a)*8;
+        const shade = 40 + Math.floor(Math.random()*60);
+        const color = `rgba(${shade/2},${Math.floor(shade*0.6)},${Math.floor(shade*0.2)},1)`; // tonos café
+        const part = new Particle(px, py, vx, vy, color, 2 + Math.random()*2, 80 + Math.floor(Math.random()*60));
+        this.particles.push(part);
       }
 
-      explode() {
-        this.exploded = true;
-        for (let i = 0; i < 100; i++) {
-          this.particles.push(new Particle(this.x, this.y, this.color));
-        }
+      // opcional: crear partículas de brillo amarillo que salen y se desvanecen
+      const sparkCount = 30;
+      for(let i=0;i<sparkCount;i++){
+        const a = Math.random()*Math.PI*2;
+        const speed = 1.2 + Math.random()*2.2;
+        const vx = Math.cos(a)*speed;
+        const vy = Math.sin(a)*speed;
+        const col = `rgba(255,230,120,${0.9 - Math.random()*0.5})`;
+        const p = new Particle(cx, cy, vx, vy, col, 1.5 + Math.random()*1.8, 70 + Math.floor(Math.random()*50));
+        this.particles.push(p);
       }
 
-      draw() {
-        if (!this.exploded) {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-        }
-
-        this.particles.forEach(particle => particle.draw());
+    } else {
+      // Comportamiento original (dispersión circular con parámetro tipo corazón antes)
+      const count = 100;
+      for(let i=0;i<count;i++){
+        const t = Math.random()*Math.PI*2;
+        const speed = 1 + Math.random()*3.2;
+        const vx = Math.cos(t)*speed;
+        const vy = Math.sin(t)*speed;
+        const col = this.color;
+        const p = new Particle(cx, cy, vx, vy, col, 2 + Math.random()*2.5, 80 + Math.floor(Math.random()*80));
+        this.particles.push(p);
       }
     }
+  }
 
-    const fireworks = [];
+  done(){
+    return this.exploded && this.particles.length === 0;
+  }
+}
 
-    function animate() {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+/* =========================
+   Bucle principal
+   ========================= */
+let fireworks = [];
+const colors = ['#ff6b6b','#ffd166','#9b5de5','#00bcd4','#ffafcc','#ffd54f','#8bd346'];
 
-      if (Math.random() < 0.05) {
-        fireworks.push(new Firework(
-          Math.random() * canvas.width,
-          canvas.height,
-          Math.random() * canvas.height / 2,
-          colors[Math.floor(Math.random() * colors.length)]
-        ));
-      }
+// lanzar fuegos regularmente
+function maybeLaunch(){
+  // cada frame 4-7% probabilidad dependiendo ancho
+  if(Math.random() < 0.05){
+    const x = 60 + Math.random()*(canvas.width-120);
+    const y = canvas.height + 10;
+    const targetY = 80 + Math.random()*(canvas.height*0.45);
+    // si es 21 de sept -> sunflower
+    const tipo = es21Septiembre() ? 'sunflower' : 'default';
+    // color base para proyectil
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const fw = new Firework(x, y, targetY, color, tipo);
+    fireworks.push(fw);
+  }
+}
 
-      fireworks.forEach((firework, index) => {
-        firework.update();
-        firework.draw();
-        if (firework.exploded && firework.particles.length === 0) {
-          fireworks.splice(index, 1);
-        }
-      });
+// animación
+let lastTime = performance.now();
+function animate(t){
+  const dt = t - lastTime;
+  lastTime = t;
 
-      requestAnimationFrame(animate);
+  // limpiar con semi-transparencia para estela
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0,0,canvas.width, canvas.height);
+
+  maybeLaunch();
+
+  // actualizar y dibujar
+  for(let i=fireworks.length-1;i>=0;i--){
+    const fw = fireworks[i];
+    fw.update();
+    fw.draw(ctx, t);
+    if(fw.done()){
+      fireworks.splice(i,1);
     }
+  }
 
-    animate();
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
 
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-  </script>
+/* Para interacción: si el usuario hace click, lanza uno manual */
+canvas.addEventListener('pointerdown', (e)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const fy = canvas.height + 8;
+  const tipo = es21Septiembre() ? 'sunflower' : 'default';
+  const color = colors[Math.floor(Math.random()*colors.length)];
+  fireworks.push(new Firework(x, fy, y, color, tipo));
+});
+
+/* Evitar que la página consuma demasiada CPU cuando está fuera de foco */
+let visible = true;
+document.addEventListener('visibilitychange', ()=>{
+  visible = !document.hidden;
+  if(visible) { lastTime = performance.now(); requestAnimationFrame(animate); }
+});
+
+</script>
 </body>
 </html>
